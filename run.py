@@ -7,6 +7,7 @@ from csv import reader
 from os import path
 from pygame.locals import *
 
+import entity
 from effect import surf_circle
 
 
@@ -64,6 +65,7 @@ def main():
     # logic primitives
     last_time = time.perf_counter()
     light_index = [15, 0.1]
+    fps = 60
 
     # sprites
     fist_world_sheet = pygame.image.load("assets/sprite_sheets/first_world.png").convert()
@@ -76,8 +78,12 @@ def main():
     # entity groups
 
     # entities and objects
-    pl = pygame.image.load("assets/sprites/player/idle/player_sprite.png").convert()
-    pl.set_colorkey((255, 255, 255))
+    player = entity.Player()
+
+    rects = []
+    slopes = []
+    lights = []
+
     level = combine_list2d(read_csv_file("assets/map_csvs/first_world_cave_0.csv"),
                            read_csv_file("assets/map_csvs/first_world_cave_1.csv"))
 
@@ -88,7 +94,15 @@ def main():
         dt *= 60
         last_time = time.perf_counter()
 
+        keys = pygame.key.get_pressed()
+
         # logic
+        player.update(dt, keys, rects)
+        if keys[pygame.K_r]:
+            fps = 5
+        else:
+            fps = 60
+
         light_index[0] += light_index[1]*dt
         if int(light_index[0]) <= 15:
             light_index[1] = 0.1
@@ -173,7 +187,7 @@ def main():
                     case _:
                         ...
 
-        display.blit(pl, (60, 125))
+        player.draw(display)
 
         for light in lights:
             light_surf = surf_circle(light[2], light[1])
@@ -198,7 +212,7 @@ def main():
         window.blit(surf, (0, 0))
 
         pygame.display.set_caption(f"here in darkness FPS:{round(clock.get_fps(), 1)}")
-        clock.tick(60)
+        clock.tick(fps)
 
     pygame.quit()
 
