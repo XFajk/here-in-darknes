@@ -7,7 +7,7 @@ from csv import reader
 from os import path
 from pygame.locals import *
 
-from effect import ShapeParticles, SparkParticles, ImgParticles
+from effect import surf_circle
 
 
 def read_csv_file(filepath: str):
@@ -63,6 +63,7 @@ def main():
 
     # logic primitives
     last_time = time.perf_counter()
+    light_index = [15, 0.1]
 
     # sprites
     fist_world_sheet = pygame.image.load("assets/sprite_sheets/first_world.png").convert()
@@ -75,6 +76,8 @@ def main():
     # entity groups
 
     # entities and objects
+    pl = pygame.image.load("assets/sprites/player/idle/player_sprite.png").convert()
+    pl.set_colorkey((255, 255, 255))
     level = combine_list2d(read_csv_file("assets/map_csvs/first_world_cave_0.csv"),
                            read_csv_file("assets/map_csvs/first_world_cave_1.csv"))
 
@@ -86,6 +89,11 @@ def main():
         last_time = time.perf_counter()
 
         # logic
+        light_index[0] += light_index[1]*dt
+        if int(light_index[0]) <= 15:
+            light_index[1] = 0.1
+        elif int(light_index[0]) >= 20:
+            light_index[1] = -0.1
 
         # drawing
         display.fill((0, 0, 0))  # begin
@@ -93,6 +101,7 @@ def main():
         # drawing the level
         rects = []
         slopes = []
+        lights = []
         ends = []
         for y, row in enumerate(level):
             for x, tile in enumerate(row):
@@ -157,10 +166,27 @@ def main():
                         rects.append(pygame.Rect(x * 8, y * 8, 8, 8))
                     case '31':
                         rects.append(pygame.Rect(x * 8, y * 8, 8, 8))
+                    case '32':
+                        lights.append([[x*8+4, y*8+4], (25, 15, 1), 25, light_index[0]])
                     case '39':
                         rects.append(pygame.Rect(x * 8, y * 8, 8, 8))
                     case _:
                         ...
+
+        display.blit(pl, (60, 125))
+
+        for light in lights:
+            light_surf = surf_circle(light[2], light[1])
+            light_surf2 = surf_circle(light[3], light[1])
+
+            display.blit(light_surf, (
+                light[0][0] - int(light_surf.get_width()/2),
+                light[0][1] - int(light_surf.get_height()/2)
+            ), special_flags=BLEND_RGB_ADD)
+            display.blit(light_surf2, (
+                light[0][0] - int(light_surf2.get_width() / 2),
+                light[0][1] - int(light_surf2.get_height() / 2)
+            ), special_flags=BLEND_RGB_ADD)
 
         pygame.display.update()  # end
 
