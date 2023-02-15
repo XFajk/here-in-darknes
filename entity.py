@@ -55,6 +55,8 @@ class Player(pygame.sprite.Sprite):
         self.size = (6, 10)
         self.vel = pygame.Vector2(0, 0)
         self.force = 0
+        self.jumped = False
+        self.air_time = 0
 
         self.rect = pygame.Rect(self.pos, self.size)
 
@@ -68,12 +70,20 @@ class Player(pygame.sprite.Sprite):
 
         self.vel = pygame.Vector2(0, 0)
         if keys[pygame.K_a]:
-            self.vel.x -= 1
+            self.vel.x -= 1.25
         if keys[pygame.K_d]:
-            self.vel.x += 1
+            self.vel.x += 1.25
+
+        if keys[pygame.K_SPACE]:
+            if not self.jumped and self.air_time < 10:
+                self.force = -2
+                self.jumped = True
 
         self.vel.y += self.force
-        self.force += 0.1
+        if self.force < 0:
+            self.force += 0.1
+        else:
+            self.force += 0.25
         if self.force > 7:
             self.force = 7
 
@@ -81,3 +91,10 @@ class Player(pygame.sprite.Sprite):
 
         if collision_types['bottom']:
             self.force = 0
+            self.jumped = False
+            self.air_time = 0
+        else:
+            self.air_time += 1
+
+        if collision_types['top']:
+            self.force = 1
